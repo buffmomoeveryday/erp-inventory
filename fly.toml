@@ -1,7 +1,5 @@
-# Fly.io — https://fly.io/docs/reference/configuration/
-# Replace the app name after: fly apps create <name> && fly.toml app = "<name>"
 app = "erp-inventory"
-primary_region = "bom"
+primary_region = "iad"
 
 [build]
 
@@ -23,9 +21,6 @@ primary_region = "bom"
   cpu_kind = "shared"
   cpus = 1
 
-# Persistent SQLite. Create once in the same region as primary_region:
-#   fly volumes create sqlite_data --region iad --size 1
-# Volumes attach to one machine; scale that process to 1+ in this region.
 [[mounts]]
   source = "sqlite_data"
   destination = "/data"

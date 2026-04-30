@@ -20,7 +20,7 @@ RUN chmod +x docker-entrypoint.sh \
     && mkdir -p /data \
     && SQLITE_DB_PATH=/tmp/build.sqlite DEBUG=False USE_WHITENOISE=1 \
        DJANGO_SECRET_KEY=collectstatic-build-only ALLOWED_HOSTS=localhost \
-       python manage.py collectstatic --noinput \
+       uv run python manage.py collectstatic --noinput \
     && rm -f /tmp/build.sqlite
 
 EXPOSE 8080

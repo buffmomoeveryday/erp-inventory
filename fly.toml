@@ -1,5 +1,5 @@
 app = "erp-inventory"
-primary_region = "iad"
+primary_region = "bom"
 
 [build]
 
@@ -9,12 +9,20 @@ primary_region = "iad"
   USE_WHITENOISE = "1"
   DEBUG = "False"
 
+[processes]
+  app = "gunicorn config.wsgi:application --bind 0.0.0.0:8080"
+
 [http_service]
   internal_port = 8080
   force_https = true
   auto_stop_machines = "stop"
   auto_start_machines = true
-  min_machines_running = 0
+  min_machines_running = 1
+
+  [http_service.concurrency]
+    type = "connections"
+    hard_limit = 25
+    soft_limit = 20
 
 [[vm]]
   memory = "512mb"

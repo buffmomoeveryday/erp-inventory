@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid" style="max-width: 90rem;">
+    <div class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between gap-3 mb-4">
+        <div>
+            <h1 class="h3 fw-bold text-dark mb-1">Stock ledger</h1>
+            <p class="text-muted small mb-0">Audit trail of quantity changes by warehouse (purchases, production, transfers, openings).</p>
+        </div>
+        <a href="{% url 'warehouse-list' %}" class="small fw-semibold">← Warehouses</a>
+    </div>
+
+    <form method="get" class="card shadow-sm border mb-4">
+        <div class="card-body py-3 row g-2 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label small text-muted mb-0">Item</label>
+                <input type="number" name="item" class="form-control form-control-sm" placeholder="Item ID" value="{{ filter_item }}">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small text-muted mb-0">Warehouse</label>
+                <select name="warehouse" class="form-select form-select-sm">
+                    <option value="">All</option>
+                    {% for w in warehouses %}
+                    <option value="{{ w.pk }}" {% if filter_warehouse == w.pk|stringformat:"s" %}selected{% endif %}>{{ w.code }} — {{ w.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small text-muted mb-0">Type</label>
+                <select name="tx_type" class="form-select form-select-sm">
+                    <option value="">All</option>
+                    {% for val, label in tx_choices %}
+                    <option value="{{ val }}" {% if filter_tx == val %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3 d-flex gap-2">
+                <button type="submit" class="btn btn-secondary btn-sm">Filter</button>
+                <a href="{% url 'stock-ledger-list' %}" class="btn btn-outline-secondary btn-sm">Clear</a>
+            </div>
+        </div>
+    </form>
+
+    <div class="card shadow-sm border overflow-hidden">
+        <div class="table-responsive">
+            <table class="table table-hover table-sm mb-0" style="min-width: 880px;">
+                <thead class="table-light small text-uppercase text-muted">
+                    <tr>
+                        <th class="px-3 py-2">When</th>
+                        <th class="px-3 py-2">Item</th>
+                        <th class="px-3 py-2">Warehouse</th>
+                        <th class="px-3 py-2 text-end">Change</th>
+                        <th class="px-3 py-2">Type</th>
+                        <th class="px-3 py-2">Reference</th>
+                        <th class="px-3 py-2">Note</th>
+                        <th class="px-3 py-2">User</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for e in entries %}
+                    <tr>
+                        <td class="px-3 py-2 text-secondary small text-nowrap">{{ e.timestamp|date:"M j, Y H:i" }}</td>
+                        <td class="px-3 py-2"><span class="font-monospace fw-semibold text-primary">{{ e.item.sku }}</span></td>
+                        <td class="px-3 py-2 small">{% if e.warehouse %}{{ e.warehouse.code }}{% else %}<span class="text-muted">—</span>{% endif %}</td>
+                        <td class="px-3 py-2 text-end font-monospace {% if e.change_quantity < 0 %}text-danger{% elif e.change_quantity > 0 %}text-success{% endif %}">{{ e.change_quantity }}</td>
+                        <td class="px-3 py-2 small">{{ e.get_tx_type_display }}</td>
+                        <td class="px-3 py-2 small font-monospace">{{ e.reference_id }}</td>
+                        <td class="px-3 py-2 small text-muted">{{ e.note|default:"—" }}</td>
+                        <td class="px-3 py-2 small">{% if e.created_by %}{{ e.created_by.get_username }}{% else %}—{% endif %}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="px-3 py-5 text-center text-muted">No ledger entries yet. Receipts, production completions, transfers, and item openings are recorded automatically.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% if entries|length >= 500 %}
+        <div class="card-footer small text-muted">Showing the most recent 500 entries. Narrow filters to see older rows in admin.</div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

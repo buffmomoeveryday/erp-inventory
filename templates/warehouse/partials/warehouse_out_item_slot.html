@@ -1,0 +1,41 @@
+<div class="warehouse-out-item-inner">
+{% if empty_reason == "no_wh" %}
+<p class="text-muted small mb-0">Choose a warehouse to load items with stock.</p>
+{% elif not stocks %}
+<p class="text-muted small mb-0">No on-hand stock at <strong>{{ from_warehouse.code }}</strong>. Receive goods or pick another source.</p>
+{% else %}
+<div class="bg-white rounded-3 border p-2 p-md-3">
+<div class="table-responsive">
+    <table class="table table-sm align-middle mb-2 mb-md-0">
+        <thead class="small text-muted text-uppercase">
+            <tr>
+                <th>Item</th>
+                <th style="width: 8rem;">Qty</th>
+                <th style="width: 4rem;"></th>
+            </tr>
+        </thead>
+        <tbody id="out-lines-body">
+            <tr class="out-line-row">
+                <td>
+                    <select name="out_item" class="form-select form-select-sm">
+                        <option value="">Select item…</option>
+                        {% for row in stocks %}
+                        <option value="{{ row.item_id }}">{{ row.item.sku }} — {{ row.item.name }} ({{ row.quantity_on_hand }} {{ row.item.uom.abbreviation }})</option>
+                        {% endfor %}
+                    </select>
+                </td>
+                <td>
+                    <input type="number" name="out_qty" class="form-control form-control-sm" step="0.001" min="0.001" placeholder="Qty">
+                </td>
+                <td class="text-end">
+                    <button type="button" class="btn btn-link btn-sm text-danger p-0 remove-out-line" disabled aria-label="Remove line">Remove</button>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+<button type="button" class="btn btn-outline-secondary btn-sm mt-2" id="add-out-line">Add another item</button>
+<p class="text-muted small mt-2 mb-0">Listed SKUs have quantity &gt; 0 at <strong>{{ from_warehouse.code }}</strong>.</p>
+</div>
+{% endif %}
+</div>

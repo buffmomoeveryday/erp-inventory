@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid" style="max-width: 80rem;">
+    <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-4">
+        <div>
+            <h1 class="h3 fw-bold text-dark mb-1">Global BOM &amp; Inventory Control</h1>
+            <p class="text-muted small mb-0">Real-time overview of manufacturing assets and stock levels.</p>
+            <div class="d-flex flex-wrap gap-2 mt-3">
+                {% if perms.users.change_bom %}
+                <a href="{% url 'create-bom' %}" class="btn btn-dark btn-sm">New bill of materials</a>
+                {% endif %}
+                {% if perms.users.production_read %}
+                <a href="{% url 'production-order-list' %}" class="btn btn-outline-secondary btn-sm">Production orders</a>
+                {% endif %}
+                {% if perms.users.change_items %}
+                <a href="{% url 'item-create' %}" class="btn btn-outline-secondary btn-sm">New item</a>
+                {% endif %}
+                {% if perms.users.view_bom %}
+                <a href="{% url 'inventory-dashboard' %}" class="btn btn-outline-secondary btn-sm">Inventory list</a>
+                {% endif %}
+            </div>
+        </div>
+        <div class="d-flex align-items-center px-3 py-2 bg-white border rounded-pill shadow-sm">
+            <span class="rounded-circle bg-primary me-2" style="width: 10px; height: 10px;" aria-hidden="true"></span>
+            <span class="small fw-semibold text-secondary">Operational</span>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-4">
+        <div class="col-md-4">
+            <div class="card shadow-sm border-start border-primary border-4 h-100">
+                <div class="card-body">
+                    <p class="text-uppercase text-muted small fw-bold mb-1" style="font-size: 0.65rem; letter-spacing: 0.06em;">Total Inventory Value</p>
+                    <h3 class="display-6 fw-bold mb-0">{{ org_currency_symbol }}{{ total_value|floatformat:2 }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card shadow-sm border-start border-danger border-4 h-100">
+                <div class="card-body">
+                    <p class="text-uppercase text-muted small fw-bold mb-1" style="font-size: 0.65rem; letter-spacing: 0.06em;">Shortage Alerts</p>
+                    <h3 class="display-6 fw-bold text-danger mb-0">{{ low_stock_count }} Items</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card shadow-sm border-start border-success border-4 h-100">
+                <div class="card-body">
+                    <p class="text-uppercase text-muted small fw-bold mb-1" style="font-size: 0.65rem; letter-spacing: 0.06em;">Production-Ready BOMs</p>
+                    <h3 class="display-6 fw-bold text-success mb-0">{{ finished_goods|length }} Products</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="card shadow-sm border overflow-hidden h-100">
+                <div class="card-header bg-light py-3">
+                    <h2 class="h6 fw-bold mb-0">Critical Reorder List</h2>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover table-sm mb-0">
+                        <thead class="table-light small text-uppercase text-muted">
+                            <tr>
+                                <th class="px-3 py-2">SKU</th>
+                                <th class="px-3 py-2">Item Name</th>
+                                <th class="px-3 py-2 text-end">Current Stock</th>
+                                <th class="px-3 py-2 text-center">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in low_stock_items %}
+                            <tr>
+                                <td class="px-3 py-2 font-monospace fw-bold text-primary">{{ item.sku }}</td>
+                                <td class="px-3 py-2">{{ item.name }}</td>
+                                <td class="px-3 py-2 text-end">
+                                    <span class="text-danger fw-bold">{{ item.current_stock }}</span>
+                                    <span class="text-muted small ms-1">{{ item.uom.abbreviation }}</span>
+                                </td>
+                                <td class="px-3 py-2 text-center"><span class="badge rounded-pill text-bg-danger">Urgent</span></td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center text-muted py-5 fst-italic">All inventory levels are healthy.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card shadow-sm border mb-4">
+                <div class="card-body">
+                    <h2 class="h6 fw-bold mb-3">BOM complexity</h2>
+                    <div style="height: 16rem;"><canvas id="complexityChart"></canvas></div>
+                    {% if finished_goods %}
+                    <ul class="list-unstyled small border-top pt-3 mt-3 mb-0">
+                        {% for item in finished_goods %}
+                        <li class="d-flex flex-wrap align-items-center gap-2 py-1">
+                            <a href="{% url 'bom-detail-dashboard' product_id=item.pk %}" class="font-monospace fw-semibold text-primary text-decoration-none">{{ item.sku }}</a>
+                            <span class="text-secondary text-truncate" style="max-width: 10rem;" title="{{ item.name }}">{{ item.name }}</span>
+                            {% if perms.users.change_bom %}
+                            <a href="{% url 'edit-bom' product_id=item.pk %}" class="small fw-semibold text-muted text-decoration-none">Edit BOM</a>
+                            {% endif %}
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="card shadow-sm border">
+                <div class="card-body">
+                    <h2 class="h6 fw-bold mb-3">Top Material Usage</h2>
+                    <div style="height: 14rem;"><canvas id="demandChart"></canvas></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        new Chart(document.getElementById('complexityChart'), {
+            type: 'bar',
+            data: {
+                labels: [{% for item in finished_goods %}"{{ item.name|escapejs }}",{% endfor %}],
+                datasets: [{
+                    label: 'Components',
+                    data: [{% for item in finished_goods %}{{ item.num_components }},{% endfor %}],
+                    backgroundColor: '#0d6efd',
+                    borderRadius: 4
+                }]
+            },
+            options: { indexAxis: 'y', plugins: { legend: { display: false } }, maintainAspectRatio: false }
+        });
+
+        new Chart(document.getElementById('demandChart'), {
+            type: 'doughnut',
+            data: {
+                labels: [{% for item in most_used_raw %}"{{ item.name|escapejs }}",{% endfor %}],
+                datasets: [{
+                    data: [{% for item in most_used_raw %}{{ item.usage_count }},{% endfor %}],
+                    backgroundColor: ['#0d6efd', '#198754', '#0dcaf0', '#fd7e14', '#dc3545']
+                }]
+            },
+            options: { cutout: '75%', plugins: { legend: { position: 'bottom' } }, maintainAspectRatio: false }
+        });
+    });
+</script>
+{% endblock %}

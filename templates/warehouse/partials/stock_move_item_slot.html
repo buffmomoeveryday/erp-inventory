@@ -1,0 +1,26 @@
+<div class="stock-move-item-inner">
+{% if empty_reason == "no_wh" %}
+<p class="text-muted small mb-0">Choose a source warehouse to load items with stock.</p>
+{% elif not stocks %}
+<p class="text-muted small mb-0">No on-hand stock at <strong>{{ from_warehouse.code }}</strong>. Receive goods or pick another source.</p>
+{% else %}
+<div class="bg-white rounded-3 border p-3 p-md-4">
+<div class="row g-3 align-items-end">
+    <div class="col-md-7">
+        <label class="form-label small fw-semibold mb-1">Item</label>
+        <select name="item" class="form-select form-select-sm" required>
+            <option value="">Select item…</option>
+            {% for row in stocks %}
+            <option value="{{ row.item_id }}">{{ row.item.sku }} — {{ row.item.name }} ({{ row.quantity_on_hand }} {{ row.item.uom.abbreviation }})</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="col-md-5">
+        <label class="form-label small fw-semibold mb-1">Quantity</label>
+        <input type="number" name="quantity" class="form-control form-control-sm" step="0.001" min="0.001" placeholder="Qty" required>
+    </div>
+</div>
+<p class="text-muted small mt-2 mb-0">Listed SKUs have quantity &gt; 0 at <strong>{{ from_warehouse.code }}</strong>.</p>
+</div>
+{% endif %}
+</div>

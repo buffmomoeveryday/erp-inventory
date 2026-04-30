@@ -1,0 +1,52 @@
+<nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom shadow-sm py-2 flex-shrink-0">
+    <div class="container-fluid">
+        <a class="navbar-brand fw-bold text-dark me-3" href="{% url 'dashboard' %}">Factory<span class="text-primary">Flow</span></a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#topNav" aria-controls="topNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="topNav">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0 small fw-medium">
+                <li class="nav-item"><a class="nav-link" href="{% url 'dashboard' %}">Dashboard</a></li>
+                {% if perms.users.view_items %}
+                <li class="nav-item"><a class="nav-link" href="{% url 'item-list' %}">Items</a></li>
+                {% endif %}
+                {% if perms.users.warehouse_read %}
+                <li class="nav-item"><a class="nav-link" href="{% url 'warehouse-list' %}">Warehouses</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'stock-ledger-list' %}">Ledger</a></li>
+                {% endif %}
+                {% if perms.users.warehouse_write %}
+                <li class="nav-item"><a class="nav-link" href="{% url 'stock-move' %}">Move</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'warehouse-out' %}">Ship out</a></li>
+                {% endif %}
+                {% if perms.users.procurement_read %}
+                <li class="nav-item"><a class="nav-link" href="{% url 'purchase-order-list' %}">Procurement</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'supplier-list' %}">Suppliers</a></li>
+                {% endif %}
+                {% if perms.users.view_bom %}
+                <li class="nav-item"><a class="nav-link" href="{% url 'bom-dashboard' %}">BOM</a></li>
+                {% endif %}
+                {% if perms.users.uom_settings %}
+                <li class="nav-item"><a class="nav-link" href="{% url 'uom-settings-hub' %}">UOM</a></li>
+                {% endif %}
+                {% if perms.users.org_settings %}
+                <li class="nav-item"><a class="nav-link" href="{% url 'settings-hub' %}">Settings</a></li>
+                {% endif %}
+                {% if perms.users.production_read %}
+                <li class="nav-item"><a class="nav-link" href="{% url 'production-order-list' %}">Production</a></li>
+                {% endif %}
+            </ul>
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+                {% if user.is_authenticated %}
+                <span class="small text-muted text-truncate d-none d-sm-inline" style="max-width: 10rem;" title="{{ user.get_username }}">{{ user.get_username }}</span>
+                <a href="/admin/" class="btn btn-sm btn-outline-secondary">Admin</a>
+                <form method="post" action="{% url 'logout' %}" class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-sm btn-dark">Sign out</button>
+                </form>
+                {% else %}
+                <a href="{% url 'login' %}" class="btn btn-sm btn-dark">Sign in</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</nav>

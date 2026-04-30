@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-xxl px-3 px-lg-4">
+    <div class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between gap-3 mb-4">
+        <div>
+            <h1 class="h3 fw-bold text-dark mb-1">Edit bill of materials</h1>
+            <p class="text-muted small mb-0">Update inputs for <strong>one unit</strong> of the output below.</p>
+        </div>
+        <div class="d-flex flex-wrap gap-2 small fw-medium">
+            <a href="{% url 'bom-detail-dashboard' product_id=product.pk %}">View requirements →</a>
+            <a href="{% url 'bom-dashboard' %}" class="text-secondary">Overview</a>
+        </div>
+    </div>
+
+    <div class="card shadow-sm border-0 bg-light mb-4">
+        <div class="card-body p-4 p-md-5">
+            <p class="small text-uppercase text-secondary fw-bold mb-2" style="letter-spacing: 0.04em;">Output product (fixed)</p>
+            <div class="d-flex flex-wrap align-items-center gap-2">
+                <span class="h5 fw-bold mb-0">{{ product.sku }} — {{ product.name }}</span>
+                {% if product.category == 'FIN' %}
+                <span class="badge text-bg-success">Finished</span>
+                {% else %}
+                <span class="badge text-bg-primary">Sub-assembly</span>
+                {% endif %}
+                <span class="text-secondary small">Stock UOM: {{ product.uom.abbreviation }}</span>
+            </div>
+        </div>
+    </div>
+
+    <form action="{% url 'edit-bom' product_id=product.pk %}" method="post" class="vstack gap-4">
+        {% csrf_token %}
+        <input type="hidden" name="product" value="{{ product.id }}">
+
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-4 p-md-5">
+                <div class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between gap-3 mb-4">
+                    <div>
+                        <p class="small text-uppercase text-secondary fw-bold mb-1" style="letter-spacing: 0.04em;">Bill of materials</p>
+                        <h2 class="h5 fw-bold mb-0">Inputs per unit of output</h2>
+                        <p class="text-secondary small mt-1 mb-0">Saving replaces all lines for this product.</p>
+                    </div>
+                    {% if perms.users.change_bom %}
+                    <button type="button"
+                            hx-get="{% url 'add_bom_row' %}"
+                            hx-target="#bom-rows"
+                            hx-swap="beforeend"
+                            class="btn btn-outline-primary btn-sm fw-bold flex-shrink-0">
+                        + Add line
+                    </button>
+                    {% endif %}
+                </div>
+
+                <p class="small text-muted mb-3">When you pick an item, the UOM defaults to how that item is stocked. You can optionally choose item-specific packaging to enter quantity in packages.</p>
+
+                <div class="table-responsive border rounded-3 bg-white">
+                    <table class="table table-sm mb-0 align-middle" style="min-width: 720px;">
+                        <thead class="table-light small text-uppercase text-muted">
+                            <tr>
+                                <th class="px-3 py-2">Material / sub-assembly</th>
+                                <th class="px-3 py-2" style="width: 7rem;">Qty per unit</th>
+                                <th class="px-3 py-2" style="width: 9rem;">Unit of measure</th>
+                                <th class="px-3 py-2" style="width: 12rem;">Packaging (optional)</th>
+                                <th class="px-3 py-2" style="width: 7rem;">Scrap %</th>
+                                <th class="px-3 py-2" style="width: 3rem;"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="bom-rows">
+                            {% if bom_lines %}
+                                {% for line in bom_lines %}
+                                    {% include "bom/partials/bom_row.html" with line=line %}
+                                {% endfor %}
+                            {% else %}
+                                {% include "bom/partials/bom_row.html" %}
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="d-flex flex-wrap justify-content-end gap-2 pt-2">
+            <a href="{% url 'bom-detail-dashboard' product_id=product.pk %}" class="btn btn-outline-secondary">Cancel</a>
+            <button type="submit" class="btn btn-dark btn-lg px-4">Update bill of materials</button>
+        </div>
+    </form>
+</div>
+
+<script>
+(function () {
+    function onBomRowsChange(ev) {
+        var sel = ev.target.closest('.bom-component-select');
+        if (!sel || !ev.target.matches('.bom-component-select')) return;
+        var opt = sel.options[sel.selectedIndex];
+        var uom = opt && opt.getAttribute('data-default-uom');
+        if (!uom) return;
+        var row = sel.closest('tr');
+        var u = row && row.querySelector('.bom-uom-select');
+        if (u) u.value = uom;
+    }
+    function onBomRowsClick(ev) {
+        var btn = ev.target.closest('.bom-remove-row');
+        if (!btn) return;
+        var tbody = document.getElementById('bom-rows');
+        if (!tbody) return;
+        var rows = tbody.querySelectorAll('tr');
+        if (rows.length <= 1) return;
+        btn.closest('tr').remove();
+    }
+    var tbody = document.getElementById('bom-rows');
+    if (tbody) {
+        tbody.addEventListener('change', onBomRowsChange);
+        tbody.addEventListener('click', onBomRowsClick);
+    }
+})();
+</script>
+{% endblock %}

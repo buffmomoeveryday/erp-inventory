@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-xxl px-3 px-lg-4">
+    <div class="row justify-content-center">
+        <div class="col-12 col-lg-10 col-xl-7">
+            <nav aria-label="breadcrumb" class="mb-3">
+                <ol class="breadcrumb small mb-0">
+                    <li class="breadcrumb-item"><a href="{% url 'uom-category-list' %}">Categories</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">{{ title }}</li>
+                </ol>
+            </nav>
+            <h1 class="h3 fw-bold text-dark mb-1">{{ title }}</h1>
+            <p class="text-muted small mb-4">UOM categories group units used on items (e.g. Count, Weight).</p>
+
+            <form method="post" class="card shadow-sm border-0">
+                <div class="card-body p-4 p-lg-5">
+                    {% csrf_token %}
+                    {% if form.non_field_errors %}
+                    <div class="alert alert-danger small mb-4">{{ form.non_field_errors }}</div>
+                    {% endif %}
+                    <div class="mb-4">
+                        <label for="{{ form.name.id_for_label }}" class="form-label small fw-semibold">{{ form.name.label }}</label>
+                        {{ form.name }}
+                        {% if form.name.errors %}<div class="text-danger small mt-1">{{ form.name.errors }}</div>{% endif %}
+                    </div>
+                    <div class="d-flex flex-wrap gap-2 pt-3 border-top justify-content-end">
+                        <a href="{% url 'uom-category-list' %}" class="btn btn-outline-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-dark px-4">Save</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

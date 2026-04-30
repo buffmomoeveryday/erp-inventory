@@ -1,0 +1,161 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-xxl px-3 px-lg-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
+        <h1 class="h3 fw-bold text-dark mb-0">{{ title }}</h1>
+        <div class="d-flex align-items-center gap-3 flex-wrap">
+            {% if item and perms.users.warehouse_read %}
+            <a href="{% url 'stock-ledger-list' %}?item={{ item.pk }}" class="small fw-semibold">Stock ledger</a>
+            {% endif %}
+            <a href="{% url 'item-list' %}" class="small fw-semibold">← Items</a>
+        </div>
+    </div>
+
+    <form method="post" class="card shadow-sm border-0 mb-4">
+        <div class="card-body p-4 p-lg-5">
+            {% csrf_token %}
+            {% if form.non_field_errors %}
+            <div class="alert alert-danger small mb-4">{{ form.non_field_errors }}</div>
+            {% endif %}
+
+            <h2 class="h6 text-uppercase text-secondary fw-bold mb-3" style="letter-spacing: 0.04em;">Identification</h2>
+            <div class="row g-3 mb-4">
+                <div class="col-md-4 col-lg-3">
+                    <label for="{{ form.sku.id_for_label }}" class="form-label small fw-semibold">{{ form.sku.label }}</label>
+                    {{ form.sku }}
+                    {% for err in form.sku.errors %}<p class="text-danger small mb-0 mt-1">{{ err }}</p>{% endfor %}
+                </div>
+                <div class="col-md-8 col-lg-9">
+                    <label for="{{ form.name.id_for_label }}" class="form-label small fw-semibold">{{ form.name.label }}</label>
+                    {{ form.name }}
+                    {% for err in form.name.errors %}<p class="text-danger small mb-0 mt-1">{{ err }}</p>{% endfor %}
+                </div>
+            </div>
+
+            <h2 class="h6 text-uppercase text-secondary fw-bold mb-3" style="letter-spacing: 0.04em;">Units & type</h2>
+            <div class="row g-3 mb-4">
+                <div class="col-md-6">
+                    <label for="{{ form.uom.id_for_label }}" class="form-label small fw-semibold">{{ form.uom.label }}</label>
+                    {{ form.uom }}
+                    {% for err in form.uom.errors %}<p class="text-danger small mb-0 mt-1">{{ err }}</p>{% endfor %}
+                </div>
+                <div class="col-md-6">
+                    <label for="{{ form.category.id_for_label }}" class="form-label small fw-semibold">{{ form.category.label }}</label>
+                    {{ form.category }}
+                    {% for err in form.category.errors %}<p class="text-danger small mb-0 mt-1">{{ err }}</p>{% endfor %}
+                </div>
+            </div>
+
+            {% if form.stock_warehouse %}
+            <h2 class="h6 text-uppercase text-secondary fw-bold mb-3" style="letter-spacing: 0.04em;">Opening stock</h2>
+            <div class="row g-3 mb-4">
+                <div class="col-md-6">
+                    <label for="{{ form.stock_warehouse.id_for_label }}" class="form-label small fw-semibold">{{ form.stock_warehouse.label }}</label>
+                    {{ form.stock_warehouse }}
+                    {% if form.stock_warehouse.help_text %}<p class="form-text small mb-0 mt-1">{{ form.stock_warehouse.help_text }}</p>{% endif %}
+                    {% for err in form.stock_warehouse.errors %}<p class="text-danger small mb-0 mt-1">{{ err }}</p>{% endfor %}
+                </div>
+                <div class="col-md-6">
+                    <label for="{{ form.current_stock.id_for_label }}" class="form-label small fw-semibold">{{ form.current_stock.label }}</label>
+                    {{ form.current_stock }}
+                    {% if form.current_stock.help_text %}<p class="form-text small mb-0 mt-1">{{ form.current_stock.help_text }}</p>{% endif %}
+                    {% for err in form.current_stock.errors %}<p class="text-danger small mb-0 mt-1">{{ err }}</p>{% endfor %}
+                </div>
+            </div>
+            {% else %}
+            <h2 class="h6 text-uppercase text-secondary fw-bold mb-3" style="letter-spacing: 0.04em;">Stock level</h2>
+            <div class="row g-3 mb-4">
+                <div class="col-md-6 col-lg-4">
+                    <label for="{{ form.current_stock.id_for_label }}" class="form-label small fw-semibold">{{ form.current_stock.label }}</label>
+                    {{ form.current_stock }}
+                    {% for err in form.current_stock.errors %}<p class="text-danger small mb-0 mt-1">{{ err }}</p>{% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <h2 class="h6 text-uppercase text-secondary fw-bold mb-3" style="letter-spacing: 0.04em;">Costing & planning</h2>
+            <div class="row g-3 mb-0">
+                <div class="col-md-6 col-lg-4">
+                    <label for="{{ form.standard_cost.id_for_label }}" class="form-label small fw-semibold">{{ form.standard_cost.label }}</label>
+                    {{ form.standard_cost }}
+                    {% for err in form.standard_cost.errors %}<p class="text-danger small mb-0 mt-1">{{ err }}</p>{% endfor %}
+                </div>
+                <div class="col-md-6 col-lg-4">
+                    <label for="{{ form.reorder_level.id_for_label }}" class="form-label small fw-semibold">{{ form.reorder_level.label }}</label>
+                    {{ form.reorder_level }}
+                    {% for err in form.reorder_level.errors %}<p class="text-danger small mb-0 mt-1">{{ err }}</p>{% endfor %}
+                </div>
+            </div>
+
+            <div class="d-flex flex-wrap gap-2 pt-4 mt-4 border-top justify-content-end">
+                <a href="{% url 'item-list' %}" class="btn btn-outline-secondary">Cancel</a>
+                <button type="submit" class="btn btn-dark px-4">{{ submit_label }}</button>
+            </div>
+        </div>
+    </form>
+
+    {% if item %}
+    <div class="card shadow-sm border-0">
+        <div class="card-body p-4 p-lg-5">
+            <h2 class="h5 fw-bold text-dark mb-1">Stock by warehouse</h2>
+            <p class="text-muted small mb-4">Balances from receipts and moves. Totals drive the item’s on-hand figure.</p>
+            {% if warehouse_rows %}
+            <div class="table-responsive border rounded-3 mb-4">
+                <table class="table table-sm table-hover align-middle mb-0">
+                    <thead class="table-light small text-uppercase text-muted">
+                        <tr><th class="ps-3">Warehouse</th><th class="text-end pe-3">On hand</th></tr>
+                    </thead>
+                    <tbody>
+                        {% for row in warehouse_rows %}
+                        <tr>
+                            <td class="ps-3">{{ row.warehouse.name }} <span class="text-muted">({{ row.warehouse.code }})</span></td>
+                            <td class="text-end pe-3 font-monospace">{{ row.quantity_on_hand }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="text-muted small mb-4">No per-warehouse balances yet. Opening stock on the item is catalog-only until you receive goods or assign stock to a warehouse.</p>
+            {% endif %}
+
+            {% if can_transfer and perms.users.warehouse_write %}
+            <h2 class="h5 fw-bold text-dark mb-1">Transfer between warehouses</h2>
+            <p class="text-muted small mb-3">Move quantity from a warehouse that holds stock into another active warehouse.</p>
+            <div class="rounded-3 border bg-light p-3 p-md-4">
+                <form method="post" class="mb-0">
+                    {% csrf_token %}
+                    {% if transfer_form.non_field_errors %}
+                    <div class="alert alert-danger small mb-3">{{ transfer_form.non_field_errors }}</div>
+                    {% endif %}
+                    <div class="row g-3 align-items-end">
+                        <div class="col-md-5">
+                            <label for="{{ transfer_form.from_warehouse.id_for_label }}" class="form-label small fw-semibold">{{ transfer_form.from_warehouse.label }}</label>
+                            {{ transfer_form.from_warehouse }}
+                            {% for err in transfer_form.from_warehouse.errors %}<p class="text-danger small mb-0 mt-1">{{ err }}</p>{% endfor %}
+                        </div>
+                        <div class="col-md-5">
+                            <label for="{{ transfer_form.to_warehouse.id_for_label }}" class="form-label small fw-semibold">{{ transfer_form.to_warehouse.label }}</label>
+                            {{ transfer_form.to_warehouse }}
+                            {% for err in transfer_form.to_warehouse.errors %}<p class="text-danger small mb-0 mt-1">{{ err }}</p>{% endfor %}
+                        </div>
+                        <div class="col-md-2">
+                            <label for="{{ transfer_form.quantity.id_for_label }}" class="form-label small fw-semibold">{{ transfer_form.quantity.label }}</label>
+                            {{ transfer_form.quantity }}
+                            {% for err in transfer_form.quantity.errors %}<p class="text-danger small mb-0 mt-1">{{ err }}</p>{% endfor %}
+                        </div>
+                    </div>
+                    <div class="mt-3 pt-3 border-top border-secondary border-opacity-25">
+                        <button type="submit" name="transfer_stock" value="1" class="btn btn-primary">Transfer stock</button>
+                    </div>
+                </form>
+            </div>
+            {% elif warehouse_rows %}
+            <p class="text-muted small mb-0">All warehouse balances are zero; nothing to transfer.</p>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container-fluid" style="max-width: 52rem;">
+    <div class="d-flex flex-column flex-sm-row justify-content-between gap-3 mb-4">
+        <div>
+            <h1 class="h3 fw-bold mb-1">Stock · <span class="font-monospace text-primary">{{ warehouse.code }}</span></h1>
+            <p class="text-secondary mb-0">{{ warehouse.name }}</p>
+        </div>
+        <a href="{% url 'warehouse-list' %}" class="small fw-semibold">← All warehouses</a>
+    </div>
+    <div class="card shadow-sm border overflow-hidden">
+        <div class="table-responsive">
+            <table class="table table-hover table-sm mb-0">
+                <thead class="table-light small text-uppercase text-muted">
+                    <tr><th class="px-3 py-2">SKU</th><th class="px-3 py-2">Item</th><th class="px-3 py-2 text-end">On hand</th></tr>
+                </thead>
+                <tbody>
+                    {% for row in lines %}
+                    <tr>
+                        <td class="px-3 py-2 font-monospace fw-semibold text-primary">{{ row.item.sku }}</td>
+                        <td class="px-3 py-2">{{ row.item.name }}</td>
+                        <td class="px-3 py-2 text-end font-monospace small">{{ row.quantity_on_hand }} {{ row.item.uom.abbreviation }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="3" class="text-center text-muted py-5">No stock rows for this warehouse yet.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

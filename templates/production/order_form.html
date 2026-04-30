@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-xxl px-3 px-lg-4">
+    <div class="row justify-content-center">
+        <div class="col-12 col-xl-10 col-xxl-8">
+            <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
+                <h1 class="h3 fw-bold text-dark mb-0">New production order</h1>
+                <a href="{% url 'production-order-list' %}" class="small fw-semibold">← Orders</a>
+            </div>
+
+            <div class="alert alert-warning border-0 shadow-sm mb-4 small">
+                Choose a <strong>sub-assembly</strong> or <strong>finished good</strong>. Materials are consumed from the BOM when you <strong>complete</strong> an in-progress order.
+            </div>
+
+            <form method="post" class="card shadow-sm border-0">
+                <div class="card-body p-4 p-lg-5">
+                    {% csrf_token %}
+                    {% if form.non_field_errors %}
+                    <div class="alert alert-danger small mb-4">{{ form.non_field_errors }}</div>
+                    {% endif %}
+                    <h2 class="h6 text-uppercase text-secondary fw-bold mb-3" style="letter-spacing: 0.04em;">Order</h2>
+                    <div class="row g-3 mb-0">
+                        <div class="col-12">
+                            <label for="{{ form.product.id_for_label }}" class="form-label small fw-semibold">{{ form.product.label }}</label>
+                            {{ form.product }}
+                            {% for err in form.product.errors %}<p class="text-danger small mb-0 mt-1">{{ err }}</p>{% endfor %}
+                        </div>
+                        <div class="col-md-4">
+                            <label for="{{ form.quantity_to_produce.id_for_label }}" class="form-label small fw-semibold">{{ form.quantity_to_produce.label }}</label>
+                            {{ form.quantity_to_produce }}
+                            {% for err in form.quantity_to_produce.errors %}<p class="text-danger small mb-0 mt-1">{{ err }}</p>{% endfor %}
+                        </div>
+                        <div class="col-md-4">
+                            <label for="{{ form.source_warehouse.id_for_label }}" class="form-label small fw-semibold">{{ form.source_warehouse.label }}</label>
+                            {{ form.source_warehouse }}
+                            {% for err in form.source_warehouse.errors %}<p class="text-danger small mb-0 mt-1">{{ err }}</p>{% endfor %}
+                        </div>
+                        <div class="col-md-4">
+                            <label for="{{ form.destination_warehouse.id_for_label }}" class="form-label small fw-semibold">{{ form.destination_warehouse.label }}</label>
+                            {{ form.destination_warehouse }}
+                            {% for err in form.destination_warehouse.errors %}<p class="text-danger small mb-0 mt-1">{{ err }}</p>{% endfor %}
+                        </div>
+                    </div>
+                    <div class="d-flex flex-wrap gap-2 pt-4 mt-4 border-top justify-content-end">
+                        <a href="{% url 'production-order-list' %}" class="btn btn-outline-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-dark btn-lg px-4">Create draft order</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

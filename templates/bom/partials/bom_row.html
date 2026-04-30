@@ -1,0 +1,68 @@
+<tr class="bom-line-row">
+    <td class="px-3 py-2">
+        <select name="component_id[]" class="form-select form-select-sm bom-component-select">
+            <option value="">— Select —</option>
+            {% if components_raw %}
+            <optgroup label="Raw materials">
+                {% for c in components_raw %}
+                <option value="{{ c.id }}" data-default-uom="{{ c.uom_id }}"
+                    {% if line and line.component_id == c.id %}selected{% endif %}>{{ c.sku }} — {{ c.name }}</option>
+                {% endfor %}
+            </optgroup>
+            {% endif %}
+            {% if components_sub %}
+            <optgroup label="Sub-assemblies">
+                {% for c in components_sub %}
+                <option value="{{ c.id }}" data-default-uom="{{ c.uom_id }}"
+                    {% if line and line.component_id == c.id %}selected{% endif %}>{{ c.sku }} — {{ c.name }}</option>
+                {% endfor %}
+            </optgroup>
+            {% endif %}
+            {% if components_fin %}
+            <optgroup label="Finished goods (kits)">
+                {% for c in components_fin %}
+                <option value="{{ c.id }}" data-default-uom="{{ c.uom_id }}"
+                    {% if line and line.component_id == c.id %}selected{% endif %}>{{ c.sku }} — {{ c.name }}</option>
+                {% endfor %}
+            </optgroup>
+            {% endif %}
+        </select>
+    </td>
+    <td class="px-3 py-2">
+        <input type="number" name="qty[]" step="0.001" min="0"
+            class="form-control form-control-sm bom-qty-input"
+            placeholder="0.000"
+            {% if line %}value="{{ line.quantity_required }}"{% endif %}>
+    </td>
+    <td class="px-3 py-2">
+        <select name="uom_id[]" class="form-select form-select-sm bom-uom-select">
+            {% for u in uoms %}
+            <option value="{{ u.id }}" {% if line and line.uom_id == u.id %}selected{% endif %}>{{ u.abbreviation }} — {{ u.name }}</option>
+            {% endfor %}
+        </select>
+    </td>
+    <td class="px-3 py-2">
+        <select name="packaging_id[]" class="form-select form-select-sm">
+            <option value="">Use UOM entry</option>
+            {% for p in packagings %}
+            <option value="{{ p.id }}" {% if line and line.packaging_id == p.id %}selected{% endif %}>
+                {{ p.item.sku }} — {{ p.code }} ({{ p.units_per_package }} {{ p.item.uom.abbreviation }})
+            </option>
+            {% endfor %}
+        </select>
+    </td>
+    <td class="px-3 py-2">
+        <input type="number" name="scrap[]" step="0.01" min="0"
+            class="form-control form-control-sm"
+            value="{% if line %}{{ line.scrap_factor }}{% else %}0.00{% endif %}">
+    </td>
+    <td class="px-3 py-2 text-center">
+        {% if perms.users.change_bom %}
+        <button type="button" class="btn btn-link text-danger p-0 bom-remove-row" aria-label="Remove line">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+        </button>
+        {% endif %}
+    </td>
+</tr>

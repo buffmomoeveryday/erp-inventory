@@ -1,0 +1,31 @@
+# Fly.io — https://fly.io/docs/reference/configuration/
+# Replace the app name after: fly apps create <name> && fly.toml app = "<name>"
+app = "erp-inventory"
+primary_region = "iad"
+
+[build]
+
+[env]
+  PORT = "8080"
+  SQLITE_DB_PATH = "/data/db.sqlite3"
+  USE_WHITENOISE = "1"
+  DEBUG = "False"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 0
+
+[[vm]]
+  memory = "512mb"
+  cpu_kind = "shared"
+  cpus = 1
+
+# Persistent SQLite. Create once in the same region as primary_region:
+#   fly volumes create sqlite_data --region iad --size 1
+# Volumes attach to one machine; scale that process to 1+ in this region.
+[[mounts]]
+  source = "sqlite_data"
+  destination = "/data"

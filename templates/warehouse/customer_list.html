@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid" style="max-width: 52rem;">
+    <div class="d-flex flex-column flex-sm-row justify-content-between gap-3 mb-4">
+        <h1 class="h3 fw-bold mb-0">Customers</h1>
+        <div class="d-flex flex-wrap gap-2">
+            {% if perms.users.warehouse_write %}
+            <a href="{% url 'customer-create' %}" class="btn btn-dark btn-sm">New customer</a>
+            {% endif %}
+            <a href="{% url 'warehouse-list' %}" class="btn btn-outline-secondary btn-sm">Warehouses</a>
+        </div>
+    </div>
+    <div class="card shadow-sm border overflow-hidden">
+        <div class="table-responsive">
+            <table class="table table-hover table-sm mb-0">
+                <thead class="table-light small text-uppercase text-muted">
+                    <tr>
+                        <th class="px-3 py-2">Code</th>
+                        <th class="px-3 py-2">Name</th>
+                        <th class="px-3 py-2">Email</th>
+                        <th class="px-3 py-2">Phone</th>
+                        <th class="px-3 py-2">Active</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for c in customers %}
+                    <tr>
+                        <td class="px-3 py-2 font-monospace fw-semibold">{{ c.code }}</td>
+                        <td class="px-3 py-2">{{ c.name }}</td>
+                        <td class="px-3 py-2 small text-muted">{{ c.email|default:"—" }}</td>
+                        <td class="px-3 py-2 small">{{ c.phone|default:"—" }}</td>
+                        <td class="px-3 py-2">{% if c.active %}<span class="badge text-bg-success">Yes</span>{% else %}<span class="badge text-bg-secondary">No</span>{% endif %}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center text-muted py-5">
+                            No customers yet.{% if perms.users.warehouse_write %} <a href="{% url 'customer-create' %}" class="fw-semibold">Add one</a> for warehouse shipments.{% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

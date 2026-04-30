@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid" style="max-width: 75rem;">
+    <div class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between gap-3 mb-4">
+        <div>
+            <h1 class="h3 fw-bold text-dark mb-1">Production orders</h1>
+            <p class="text-muted small mb-0">Create batches, start when materials are ready, complete to move stock.</p>
+        </div>
+        {% if perms.users.production_write %}
+        <a href="{% url 'production-order-create' %}" class="btn btn-dark btn-sm">New order</a>
+        {% endif %}
+    </div>
+
+    <form method="get" class="card shadow-sm border mb-4">
+        <div class="card-body py-3 d-flex flex-wrap align-items-end gap-2">
+            <div>
+                <label class="form-label small text-uppercase text-muted fw-bold mb-1">Status</label>
+                <select name="status" class="form-select form-select-sm" style="min-width: 12rem;">
+                    <option value="" {% if not filter_status %}selected{% endif %}>All</option>
+                    {% for val, label in status_choices %}
+                    <option value="{{ val }}" {% if filter_status == val %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button type="submit" class="btn btn-secondary btn-sm">Filter</button>
+            <a href="{% url 'production-order-list' %}" class="btn btn-link btn-sm py-2">Clear</a>
+        </div>
+    </form>
+
+    <div class="card shadow-sm border overflow-hidden">
+        <div class="table-responsive">
+            <table class="table table-hover table-sm mb-0" style="min-width: 640px;">
+                <thead class="table-light small text-uppercase text-muted">
+                    <tr>
+                        <th class="px-3 py-2">Batch</th>
+                        <th class="px-3 py-2">Product</th>
+                        <th class="px-3 py-2 text-end">Qty</th>
+                        <th class="px-3 py-2">Status</th>
+                        <th class="px-3 py-2">Approval</th>
+                        <th class="px-3 py-2">Created</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for o in orders %}
+                    <tr>
+                        <td class="px-3 py-2">
+                            <a href="{% url 'production-order-detail' pk=o.pk %}" class="font-monospace fw-bold text-primary text-decoration-none">{{ o.batch_number }}</a>
+                        </td>
+                        <td class="px-3 py-2">
+                            <span class="fw-medium">{{ o.product.sku }}</span>
+                            <span class="text-secondary small d-block">{{ o.product.name }}</span>
+                        </td>
+                        <td class="px-3 py-2 text-end font-monospace small">{{ o.quantity_to_produce }} {{ o.product.uom.abbreviation }}</td>
+                        <td class="px-3 py-2">
+                            {% if o.status == 'DRAFT' %}
+                            <span class="badge rounded-pill text-bg-secondary">Draft</span>
+                            {% elif o.status == 'PENDING' %}
+                            <span class="badge rounded-pill text-bg-warning text-dark">Pending</span>
+                            {% elif o.status == 'PROGRESS' %}
+                            <span class="badge rounded-pill text-bg-primary">In progress</span>
+                            {% elif o.status == 'COMPLETED' %}
+                            <span class="badge rounded-pill text-bg-success">Completed</span>
+                            {% else %}
+                            <span class="badge rounded-pill text-bg-danger">Cancelled</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-3 py-2 small">
+                            {% if o.approved_at %}
+                            <span class="text-success">Yes</span>
+                            {% elif o.status == 'DRAFT' or o.status == 'PENDING' %}
+                            <span class="text-warning">Pending</span>
+                            {% else %}—{% endif %}
+                        </td>
+                        <td class="px-3 py-2 text-secondary small">{{ o.created_at|date:"M j, Y H:i" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center text-muted py-5">No production orders yet.{% if perms.users.production_write %} <a href="{% url 'production-order-create' %}" class="fw-semibold">Create one</a>{% endif %}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid" style="max-width: 80rem;">
+    <div class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between gap-3 mb-4">
+        <div>
+            <h1 class="h3 fw-bold text-dark mb-1">Inventory</h1>
+            <p class="text-muted small mb-0">All items and current stock levels.</p>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+            {% if perms.users.view_bom %}
+            <a href="{% url 'bom-dashboard' %}" class="btn btn-link btn-sm text-decoration-none p-0 align-self-center">← BOM overview</a>
+            {% endif %}
+            {% if perms.users.change_items %}
+            <a href="{% url 'item-create' %}" class="btn btn-outline-secondary btn-sm">New item</a>
+            {% endif %}
+            {% if perms.users.change_bom %}
+            <a href="{% url 'create-bom' %}" class="btn btn-outline-secondary btn-sm">New BOM</a>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-lg-3">
+            <div class="card shadow-sm border-start border-secondary border-4 h-100">
+                <div class="card-body">
+                    <p class="text-uppercase text-muted small fw-bold mb-1" style="font-size: 0.65rem;">Total SKUs</p>
+                    <p class="display-6 fw-bold mb-0">{{ stats.total_items }}</p>
+                    <p class="text-muted small mb-0 mt-1">Items in catalog</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <a href="{% url 'inventory-dashboard' %}?stock=low" class="card shadow-sm border-start border-danger border-4 h-100 text-decoration-none text-dark">
+                <div class="card-body">
+                    <p class="text-uppercase text-muted small fw-bold mb-1" style="font-size: 0.65rem;">Below reorder</p>
+                    <p class="display-6 fw-bold text-danger mb-0">{{ stats.below_reorder }}</p>
+                    <p class="small text-danger mb-0 mt-1">View filtered list →</p>
+                </div>
+            </a>
+        </div>
+        <div class="col-6 col-lg-3">
+            <a href="{% url 'inventory-dashboard' %}?stock=ok" class="card shadow-sm border-start border-success border-4 h-100 text-decoration-none text-dark">
+                <div class="card-body">
+                    <p class="text-uppercase text-muted small fw-bold mb-1" style="font-size: 0.65rem;">At or above reorder</p>
+                    <p class="display-6 fw-bold text-success mb-0">{{ stats.at_or_above_reorder }}</p>
+                    <p class="small text-success mb-0 mt-1">View filtered list →</p>
+                </div>
+            </a>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="card shadow-sm border-start border-primary border-4 h-100">
+                <div class="card-body">
+                    <p class="text-uppercase text-muted small fw-bold mb-1" style="font-size: 0.65rem;">Inventory value</p>
+                    <p class="display-6 fw-bold mb-0">{{ org_currency_symbol }}{{ stats.total_value|floatformat:2 }}</p>
+                    <p class="text-muted small mb-0 mt-1">At standard cost</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-body py-3 d-flex flex-column flex-sm-row flex-sm-wrap align-items-sm-center justify-content-between gap-2">
+            <p class="small text-secondary mb-0">
+                <span class="fw-semibold text-dark">By type:</span>
+                <span class="ms-2"><span class="d-inline-block rounded-circle bg-warning me-1" style="width:8px;height:8px;"></span> {{ stats.count_raw }} raw</span>
+                <span class="text-muted mx-2">·</span>
+                <span><span class="d-inline-block rounded-circle bg-primary me-1" style="width:8px;height:8px;"></span> {{ stats.count_sub }} sub</span>
+                <span class="text-muted mx-2">·</span>
+                <span><span class="d-inline-block rounded-circle bg-success me-1" style="width:8px;height:8px;"></span> {{ stats.count_fin }} finished</span>
+            </p>
+            {% if has_filters %}
+            <p class="small text-muted mb-0 flex-shrink-0">Showing <strong class="text-dark">{{ filtered_count }}</strong> of {{ stats.total_items }} items</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <form method="get" action="{% url 'inventory-dashboard' %}" class="card shadow-sm mb-4">
+        <div class="card-body">
+            <div class="row g-3 align-items-end">
+                <div class="col-lg-4">
+                    <label for="inv-q" class="form-label small text-uppercase text-muted fw-bold mb-1">Search</label>
+                    <input type="search" id="inv-q" name="q" value="{{ filter_q }}" placeholder="SKU or name" class="form-control form-control-sm">
+                </div>
+                <div class="col-md-4 col-lg-2">
+                    <label for="inv-cat" class="form-label small text-uppercase text-muted fw-bold mb-1">Type</label>
+                    <select id="inv-cat" name="category" class="form-select form-select-sm">
+                        <option value="" {% if not filter_category %}selected{% endif %}>All types</option>
+                        <option value="RAW" {% if filter_category == 'RAW' %}selected{% endif %}>Raw</option>
+                        <option value="SUB" {% if filter_category == 'SUB' %}selected{% endif %}>Sub-assembly</option>
+                        <option value="FIN" {% if filter_category == 'FIN' %}selected{% endif %}>Finished</option>
+                    </select>
+                </div>
+                <div class="col-md-4 col-lg-2">
+                    <label for="inv-stock" class="form-label small text-uppercase text-muted fw-bold mb-1">Stock</label>
+                    <select id="inv-stock" name="stock" class="form-select form-select-sm">
+                        <option value="" {% if not filter_stock %}selected{% endif %}>Any</option>
+                        <option value="low" {% if filter_stock == 'low' %}selected{% endif %}>Below reorder</option>
+                        <option value="ok" {% if filter_stock == 'ok' %}selected{% endif %}>At or above reorder</option>
+                    </select>
+                </div>
+                <div class="col-md-4 col-lg-auto d-flex flex-wrap gap-2">
+                    <button type="submit" class="btn btn-dark btn-sm">Apply</button>
+                    <a href="{% url 'inventory-dashboard' %}" class="btn btn-outline-secondary btn-sm">Clear</a>
+                </div>
+            </div>
+        </div>
+    </form>
+
+    <div class="card shadow-sm overflow-hidden">
+        <div class="table-responsive">
+            <table class="table table-hover table-sm mb-0" style="min-width: 720px;">
+                <thead class="table-light small text-uppercase text-muted">
+                    <tr>
+                        <th class="px-3 py-2">SKU</th>
+                        <th class="px-3 py-2">Name</th>
+                        <th class="px-3 py-2">Type</th>
+                        <th class="px-3 py-2 text-end">On hand</th>
+                        <th class="px-3 py-2 text-end">Reorder at</th>
+                        <th class="px-3 py-2 text-end">Std cost</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in items %}
+                    <tr>
+                        <td class="px-3 py-2 font-monospace fw-semibold text-primary">{{ item.sku }}</td>
+                        <td class="px-3 py-2">{{ item.name }}</td>
+                        <td class="px-3 py-2">
+                            {% if item.category == 'RAW' %}
+                            <span class="badge text-bg-warning text-dark">Raw</span>
+                            {% elif item.category == 'SUB' %}
+                            <span class="badge text-bg-primary">Sub</span>
+                            {% else %}
+                            <span class="badge text-bg-success">Finished</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-3 py-2 text-end font-monospace small">{{ item.current_stock }} <span class="text-muted">{{ item.uom.abbreviation }}</span></td>
+                        <td class="px-3 py-2 text-end text-secondary small">{{ item.reorder_level }} <span class="text-muted">{{ item.uom.abbreviation }}</span></td>
+                        <td class="px-3 py-2 text-end">{{ org_currency_symbol }}{{ item.standard_cost|floatformat:2 }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center text-muted py-5">
+                            {% if filter_q or filter_category or filter_stock %}
+                            No items match these filters. <a href="{% url 'inventory-dashboard' %}" class="fw-semibold">Clear filters</a>
+                            {% else %}
+                            No items yet.
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

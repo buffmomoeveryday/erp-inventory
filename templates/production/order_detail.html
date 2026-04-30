@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid" style="max-width: 52rem;">
+    <div class="d-flex flex-column flex-sm-row align-items-sm-start justify-content-between gap-3 mb-4">
+        <div>
+            <p class="small text-uppercase text-muted fw-bold mb-1">Batch</p>
+            <h1 class="h3 fw-bold font-monospace mb-2">{{ order.batch_number }}</h1>
+            <p class="text-secondary mb-1">{{ order.product.sku }} — {{ order.product.name }}</p>
+            <p class="text-muted small mb-0">Produce <strong>{{ order.quantity_to_produce }}</strong> {{ order.product.uom.abbreviation }}</p>
+        </div>
+        <div class="text-end">
+            {% if order.status == 'DRAFT' or order.status == 'PENDING' %}
+            <span class="badge rounded-pill text-bg-secondary">{{ order.get_status_display }}</span>
+            {% elif order.status == 'PROGRESS' %}
+            <span class="badge rounded-pill text-bg-primary">{{ order.get_status_display }}</span>
+            {% elif order.status == 'COMPLETED' %}
+            <span class="badge rounded-pill text-bg-success">{{ order.get_status_display }}</span>
+            {% else %}
+            <span class="badge rounded-pill text-bg-danger">{{ order.get_status_display }}</span>
+            {% endif %}
+            {% if order.status == 'DRAFT' or order.status == 'PENDING' %}
+            <p class="small text-muted mb-0 mt-2">
+                {% if order.approved_at %}
+                <span class="text-success fw-semibold">Approved</span>
+                {{ order.approved_at|date:"M j, Y H:i" }}{% if order.approved_by %} · {{ order.approved_by.get_username }}{% endif %}
+                {% else %}
+                <span class="text-warning fw-semibold">Awaiting approval</span> before production can start.
+                {% endif %}
+            </p>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="d-flex flex-wrap gap-2 small mb-4">
+        <a href="{% url 'production-order-list' %}" class="fw-semibold">← All orders</a>
+        {% if perms.users.view_bom %}
+        <a href="{% url 'bom-detail-dashboard' product_id=order.product_id %}" class="text-secondary">BOM requirements</a>
+        {% endif %}
+    </div>
+
+    {% if not has_bom %}
+    <div class="alert alert-warning border small mb-4">
+        This product has <strong>no BOM</strong>. Starting and completing will only change <strong>finished output</strong> stock (no components consumed).{% if perms.users.change_bom %} Add a BOM under <a href="{% url 'create-bom' %}" class="fw-bold">New bill of materials</a> if needed.{% endif %}
+    </div>
+    {% endif %}
+
+    {% if has_bom %}
+    <div class="card shadow-sm border mb-4 overflow-hidden">
+        <div class="card-header bg-light py-3">
+            <h2 class="h6 fw-bold mb-0">Materials for this run</h2>
+            <p class="text-muted small mb-0 mt-1">Quantities in each component’s stock UOM (includes scrap).</p>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-sm mb-0" style="min-width: 560px;">
+                <thead class="table-light small text-uppercase text-muted">
+                    <tr>
+                        <th class="px-3 py-2">Component</th>
+                        <th class="px-3 py-2 text-end">Required</th>
+                        <th class="px-3 py-2 text-end">On hand</th>
+                        <th class="px-3 py-2">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in material_lines %}
+                    <tr>
+                        <td class="px-3 py-2">
+                            <span class="font-monospace text-primary fw-semibold">{{ row.bom.component.sku }}</span>
+                            <span class="d-block">{{ row.bom.component.name }}</span>
+                        </td>
+                        <td class="px-3 py-2 text-end font-monospace small">{{ row.required|floatformat:3 }} {{ row.bom.component.uom.abbreviation }}</td>
+                        <td class="px-3 py-2 text-end font-monospace small">{{ row.stock|floatformat:3 }}</td>
+                        <td class="px-3 py-2">
+                            {% if row.ok %}
+                            <span class="text-success fw-semibold small">OK</span>
+                            {% else %}
+                            <span class="text-danger fw-semibold small">Short {{ row.short|floatformat:3 }}</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="card bg-light border mb-4">
+        <div class="card-body py-3 small text-secondary">
+            {% if order.source_warehouse %}
+            <p class="mb-1"><span class="fw-semibold text-dark">Source warehouse:</span> {{ order.source_warehouse.name }} ({{ order.source_warehouse.code }})</p>
+            {% endif %}
+            {% if order.destination_warehouse %}
+            <p class="mb-1"><span class="fw-semibold text-dark">Destination warehouse:</span> {{ order.destination_warehouse.name }} ({{ order.destination_warehouse.code }})</p>
+            {% endif %}
+            {% if not order.source_warehouse and not order.destination_warehouse %}
+            <p class="mb-0 text-muted">No warehouses recorded on this order (optional). Global item stock is still updated on complete.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="d-flex flex-wrap gap-2">
+        {% if order.status == 'DRAFT' or order.status == 'PENDING' %}
+        {% if perms.users.production_approve %}
+        {% if not order.approved_at %}
+        <form method="post" action="{% url 'production-order-approve' pk=order.pk %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-success">Approve</button>
+        </form>
+        {% endif %}
+        {% endif %}
+        {% if perms.users.production_write %}
+        <form method="post" action="{% url 'production-order-start' pk=order.pk %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-primary {% if not can_start or not order.approved_at %}disabled{% endif %}"
+                {% if not can_start %}disabled title="Insufficient stock for one or more components"{% elif not order.approved_at %}disabled title="Approve this order first"{% endif %}>
+                Start production
+            </button>
+        </form>
+        <form method="post" action="{% url 'production-order-cancel' pk=order.pk %}" onsubmit="return confirm('Cancel this order?');">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-outline-secondary">Cancel order</button>
+        </form>
+        {% endif %}
+        {% endif %}
+
+        {% if order.status == 'PROGRESS' and perms.users.production_write %}
+        <form method="post" action="{% url 'production-order-complete' pk=order.pk %}" onsubmit="return confirm('Complete this batch? Component and finished stock will be updated.');">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-success">Complete production</button>
+        </form>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

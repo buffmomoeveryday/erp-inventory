@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-xxl px-3 px-lg-4">
+    <div class="row justify-content-center">
+        <div class="col-12 col-lg-10 col-xl-8">
+            <nav aria-label="breadcrumb" class="mb-3">
+                <ol class="breadcrumb small mb-0">
+                    <li class="breadcrumb-item"><a href="{% url 'uom-list' %}">Units</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">{{ title }}</li>
+                </ol>
+            </nav>
+            <h1 class="h3 fw-bold text-dark mb-1">{{ title }}</h1>
+            <p class="text-muted small mb-4">Base unit: only one per category. Factor = base units per one of this unit (the base unit uses 1).</p>
+
+            <form method="post" class="card shadow-sm border-0">
+                <div class="card-body p-4 p-lg-5">
+                    {% csrf_token %}
+                    {% if form.non_field_errors %}
+                    <div class="alert alert-danger small mb-4">{{ form.non_field_errors }}</div>
+                    {% endif %}
+                    <h2 class="h6 text-uppercase text-secondary fw-bold mb-3" style="letter-spacing: 0.04em;">Unit</h2>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label for="{{ form.name.id_for_label }}" class="form-label small fw-semibold">{{ form.name.label }}</label>
+                            {{ form.name }}
+                            {% if form.name.errors %}<div class="text-danger small mt-1">{{ form.name.errors }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label for="{{ form.abbreviation.id_for_label }}" class="form-label small fw-semibold">{{ form.abbreviation.label }}</label>
+                            {{ form.abbreviation }}
+                            {% if form.abbreviation.errors %}<div class="text-danger small mt-1">{{ form.abbreviation.errors }}</div>{% endif %}
+                        </div>
+                        <div class="col-12 col-md-8">
+                            <label for="{{ form.category.id_for_label }}" class="form-label small fw-semibold">{{ form.category.label }}</label>
+                            {{ form.category }}
+                            {% if form.category.errors %}<div class="text-danger small mt-1">{{ form.category.errors }}</div>{% endif %}
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label for="{{ form.conversion_factor.id_for_label }}" class="form-label small fw-semibold">{{ form.conversion_factor.label }}</label>
+                            {{ form.conversion_factor }}
+                            {% if form.conversion_factor.errors %}<div class="text-danger small mt-1">{{ form.conversion_factor.errors }}</div>{% endif %}
+                        </div>
+                        <div class="col-12">
+                            <div class="rounded-3 border bg-light p-3">
+                                <div class="form-check mb-0">
+                                    {{ form.is_base_unit }}
+                                    <label class="form-check-label small" for="{{ form.is_base_unit.id_for_label }}">{{ form.is_base_unit.label }}</label>
+                                </div>
+                                <p class="small text-muted mb-0 mt-2">Reference unit for conversions in this category.</p>
+                                {% if form.is_base_unit.errors %}<div class="text-danger small mt-1">{{ form.is_base_unit.errors }}</div>{% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="d-flex flex-wrap gap-2 pt-3 border-top justify-content-end">
+                        <a href="{% url 'uom-list' %}" class="btn btn-outline-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-dark px-4">Save</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

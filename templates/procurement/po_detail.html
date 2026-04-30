@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container-fluid" style="max-width: 52rem;">
+    <div class="d-flex flex-column flex-sm-row justify-content-between gap-3 mb-4">
+        <div>
+            <h1 class="h3 fw-bold font-monospace mb-1">{{ po.po_number }}</h1>
+            <p class="text-secondary mb-1">{{ po.supplier.name }} ({{ po.supplier.code }})</p>
+            <p class="small text-muted mb-0">Status: <strong>{{ po.get_status_display }}</strong></p>
+            {% if po.status == 'DRAFT' %}
+            <p class="small mb-0 mt-1">
+                {% if po.approved_at %}
+                <span class="text-success fw-semibold">Approved</span>
+                <span class="text-muted">{{ po.approved_at|date:"M j, Y H:i" }}{% if po.approved_by %} · {{ po.approved_by.get_username }}{% endif %}</span>
+                {% else %}
+                <span class="text-warning fw-semibold">Awaiting approval</span> before this PO can be sent.
+                {% endif %}
+            </p>
+            {% endif %}
+        </div>
+        <div class="d-flex flex-wrap gap-2 align-items-center">
+            {% if po.status == 'DRAFT' %}
+            {% if perms.users.procurement_approve %}
+            {% if not po.approved_at %}
+            <form method="post" action="{% url 'purchase-order-approve' pk=po.pk %}" class="d-inline">{% csrf_token %}<button type="submit" class="btn btn-success btn-sm">Approve</button></form>
+            {% endif %}
+            <form method="post" action="{% url 'purchase-order-send' pk=po.pk %}" class="d-inline">{% csrf_token %}<button type="submit" class="btn btn-primary btn-sm" {% if not po.approved_at %}disabled title="Approve this PO first"{% endif %}>Send order</button></form>
+            {% endif %}
+            {% if perms.users.procurement_write %}
+            <form method="post" action="{% url 'purchase-order-cancel' pk=po.pk %}" class="d-inline" onsubmit="return confirm('Cancel this PO?');">{% csrf_token %}<button type="submit" class="btn btn-outline-secondary btn-sm">Cancel</button></form>
+            {% endif %}
+            {% endif %}
+            {% if po.status == 'SENT' or po.status == 'PARTIAL' %}
+            {% if perms.users.procurement_write %}
+            <a href="{% url 'purchase-order-receive' pk=po.pk %}" class="btn btn-success btn-sm">Receive goods</a>
+            {% endif %}
+            {% endif %}
+            <a href="{% url 'purchase-order-list' %}" class="small fw-semibold">← All POs</a>
+        </div>
+    </div>
+    <div class="card shadow-sm border overflow-hidden mb-4">
+        <div class="table-responsive">
+            <table class="table table-sm mb-0">
+                <thead class="table-light small text-uppercase text-muted"><tr><th class="px-3 py-2">Item</th><th class="px-3 py-2 text-end">Ordered</th><th class="px-3 py-2 text-end">Received</th><th class="px-3 py-2 text-end">Unit price</th></tr></thead>
+                <tbody>
+                    {% for line in po.items.all %}
+                    <tr>
+                        <td class="px-3 py-2"><span class="font-monospace text-primary fw-semibold">{{ line.item.sku }}</span><span class="d-block text-secondary small">{{ line.item.name }}</span></td>
+                        <td class="px-3 py-2 text-end font-monospace small">{{ line.quantity_ordered }} {{ line.item.uom.abbreviation }}</td>
+                        <td class="px-3 py-2 text-end font-monospace small">{{ line.quantity_received }}</td>
+                        <td class="px-3 py-2 text-end">{{ org_currency_symbol }}{{ line.unit_price|floatformat:2 }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% if po.receipts.all %}
+    <div class="card bg-light border">
+        <div class="card-body py-3">
+            <h2 class="h6 fw-bold mb-2">Receipts</h2>
+            <ul class="list-unstyled small mb-0">
+                {% for r in po.receipts.all %}
+                <li>{{ r.received_at|date:"M j, Y H:i" }} — {{ r.receiving_warehouse.code|default:"—" }} {% if r.reference_note %}({{ r.reference_note }}){% endif %}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

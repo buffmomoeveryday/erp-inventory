@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container-fluid" style="max-width: 52rem;">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 fw-bold mb-0">Warehouses</h1>
+        <div class="d-flex flex-wrap gap-2">
+            {% if perms.users.warehouse_write %}
+            <a href="{% url 'stock-move' %}" class="btn btn-outline-primary btn-sm">Move stock</a>
+            <a href="{% url 'warehouse-out' %}" class="btn btn-outline-primary btn-sm">Warehouse out</a>
+            {% endif %}
+            {% if perms.users.warehouse_manage %}
+            <a href="{% url 'warehouse-create' %}" class="btn btn-dark btn-sm">New warehouse</a>
+            {% endif %}
+        </div>
+    </div>
+    <div class="card shadow-sm border overflow-hidden">
+        <div class="table-responsive">
+            <table class="table table-hover table-sm mb-0">
+                <thead class="table-light small text-uppercase text-muted">
+                    <tr><th class="px-3 py-2">Code</th><th class="px-3 py-2">Name</th><th class="px-3 py-2">Active</th><th class="px-3 py-2 text-end"></th></tr>
+                </thead>
+                <tbody>
+                    {% for w in warehouses %}
+                    <tr>
+                        <td class="px-3 py-2 font-monospace fw-semibold">{{ w.code }}</td>
+                        <td class="px-3 py-2">{{ w.name }}</td>
+                        <td class="px-3 py-2">{% if w.is_active %}Yes{% else %}No{% endif %}</td>
+                        <td class="px-3 py-2 text-end">
+                            <a href="{% url 'warehouse-stock' pk=w.pk %}" class="fw-semibold small me-2">Stock</a>
+                            {% if perms.users.warehouse_manage %}
+                            <a href="{% url 'warehouse-edit' pk=w.pk %}" class="text-secondary small">Edit</a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="4" class="text-center text-muted py-5">No warehouses.{% if perms.users.warehouse_manage %} <a href="{% url 'warehouse-create' %}" class="fw-semibold">Create one</a>{% endif %}</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

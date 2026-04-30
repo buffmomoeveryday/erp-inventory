@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container-fluid" style="max-width: 75rem;">
+    <div class="d-flex flex-column flex-sm-row justify-content-between gap-3 mb-4">
+        <h1 class="h3 fw-bold mb-0">Purchase orders</h1>
+        <div class="d-flex flex-wrap gap-2">
+            {% if perms.users.procurement_write %}
+            <a href="{% url 'purchase-order-create' %}" class="btn btn-dark btn-sm">New PO</a>
+            {% endif %}
+            <a href="{% url 'supplier-list' %}" class="btn btn-outline-secondary btn-sm">Suppliers</a>
+        </div>
+    </div>
+    <form method="get" class="card shadow-sm border mb-4">
+        <div class="card-body py-3 d-flex flex-wrap align-items-end gap-2">
+            <div>
+                <label class="form-label small text-uppercase text-muted fw-bold mb-1">Status</label>
+                <select name="status" class="form-select form-select-sm" style="min-width: 10rem;">
+                    <option value="">All</option>
+                    {% for val, label in status_choices %}<option value="{{ val }}" {% if filter_status == val %}selected{% endif %}>{{ label }}</option>{% endfor %}
+                </select>
+            </div>
+            <button type="submit" class="btn btn-secondary btn-sm">Filter</button>
+        </div>
+    </form>
+    <div class="card shadow-sm border overflow-hidden">
+        <div class="table-responsive">
+            <table class="table table-hover table-sm mb-0">
+                <thead class="table-light small text-uppercase text-muted">
+                    <tr><th class="px-3 py-2">PO</th><th class="px-3 py-2">Supplier</th><th class="px-3 py-2">Status</th><th class="px-3 py-2">Approval</th><th class="px-3 py-2">Created</th></tr>
+                </thead>
+                <tbody>
+                    {% for o in orders %}
+                    <tr>
+                        <td class="px-3 py-2"><a href="{% url 'purchase-order-detail' pk=o.pk %}" class="font-monospace fw-bold text-primary text-decoration-none">{{ o.po_number }}</a></td>
+                        <td class="px-3 py-2">{{ o.supplier.name }}</td>
+                        <td class="px-3 py-2">{{ o.get_status_display }}</td>
+                        <td class="px-3 py-2 small">
+                            {% if o.approved_at %}
+                            <span class="text-success">Yes</span>
+                            {% elif o.status == 'DRAFT' %}
+                            <span class="text-warning">Pending</span>
+                            {% else %}—{% endif %}
+                        </td>
+                        <td class="px-3 py-2 text-secondary small">{{ o.created_at|date:"M j, Y" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="5" class="text-center text-muted py-5">No purchase orders.{% if perms.users.procurement_write %} <a href="{% url 'purchase-order-create' %}" class="fw-semibold">Create one</a>{% endif %}</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

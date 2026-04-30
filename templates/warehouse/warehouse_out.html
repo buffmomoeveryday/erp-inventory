@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block title %}Warehouse out{% endblock %}
+
+{% block content %}
+<div class="container-xxl px-3 px-lg-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
+        <div class="pe-3" style="max-width: 42rem;">
+            <h1 class="h3 fw-bold text-dark mb-1">Warehouse out</h1>
+            <p class="text-muted small mb-0">Record stock leaving for a customer. Set warehouse and customer, add one or more SKUs, then submit. Optional invoice # and freebie flag.</p>
+        </div>
+        <a href="{% url 'warehouse-list' %}" class="small fw-semibold text-nowrap mt-1">← Warehouses</a>
+    </div>
+
+    <form id="warehouse-out-form" method="post" action="{% url 'warehouse-out' %}" class="card shadow-sm border-0">
+        <div class="card-body p-4 p-lg-5">
+            {% csrf_token %}
+            {% if form.non_field_errors %}
+            <div class="alert alert-danger small mb-4">{{ form.non_field_errors }}</div>
+            {% endif %}
+
+            <div class="row g-4 g-xl-5">
+                <div class="col-xl-7">
+                    <h2 class="h6 text-uppercase text-secondary fw-bold letter-spacing-tight mb-3">Shipment</h2>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold mb-1" for="{{ form.warehouse.id_for_label }}">{{ form.warehouse.label }}</label>
+                            {{ form.warehouse }}
+                            {% for e in form.warehouse.errors %}<p class="text-danger small mb-0 mt-1">{{ e }}</p>{% endfor %}
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex justify-content-between align-items-center gap-2 mb-1">
+                                <label class="form-label small fw-semibold mb-0" for="{{ form.customer.id_for_label }}">{{ form.customer.label }}</label>
+                                {% if perms.users.warehouse_write %}
+                                <a href="{% url 'customer-create' %}" class="small fw-semibold text-nowrap">+ New customer</a>
+                                {% endif %}
+                            </div>
+                            {{ form.customer }}
+                            {% for e in form.customer.errors %}<p class="text-danger small mb-0 mt-1">{{ e }}</p>{% endfor %}
+                        </div>
+                        <div class="col-md-5 col-lg-4">
+                            <label class="form-label small fw-semibold mb-1" for="{{ form.invoice_number.id_for_label }}">{{ form.invoice_number.label }}</label>
+                            {{ form.invoice_number }}
+                            {% for e in form.invoice_number.errors %}<p class="text-danger small mb-0 mt-1">{{ e }}</p>{% endfor %}
+                        </div>
+                        <div class="col-md-7 col-lg-8">
+                            <label class="form-label small fw-semibold mb-1" for="{{ form.ship_to.id_for_label }}">{{ form.ship_to.label }}</label>
+                            {{ form.ship_to }}
+                            {% for e in form.ship_to.errors %}<p class="text-danger small mb-0 mt-1">{{ e }}</p>{% endfor %}
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-5">
+                    <h2 class="h6 text-uppercase text-secondary fw-bold letter-spacing-tight mb-3">Notes</h2>
+                    <label class="form-label small fw-semibold mb-1" for="{{ form.note.id_for_label }}">{{ form.note.label }}</label>
+                    {{ form.note }}
+                    {% for e in form.note.errors %}<p class="text-danger small mb-0 mt-1">{{ e }}</p>{% endfor %}
+                    <div class="rounded-3 border bg-light p-3 mt-3">
+                        <div class="form-check mb-0">
+                            {{ form.is_freebie }}
+                            <label class="form-check-label small" for="{{ form.is_freebie.id_for_label }}">{{ form.is_freebie.label }}</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <hr class="my-4 my-xl-5 text-secondary opacity-25">
+
+            <h2 class="h6 text-uppercase text-secondary fw-bold letter-spacing-tight mb-3">Items to ship</h2>
+            <div id="warehouse-out-item-slot" class="rounded-3 border bg-light p-3 p-md-4">
+                <p class="text-muted small mb-0">Select a <strong>warehouse</strong> in Shipment above to load items with on-hand stock.</p>
+            </div>
+
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mt-4 pt-3 border-top">
+                <p class="small text-muted mb-0">Each line posts against the same shipment and invoice (if any).</p>
+                <button type="submit" class="btn btn-primary btn-lg px-4">Record shipment</button>
+            </div>
+        </div>
+    </form>
+</div>
+<style>
+    .letter-spacing-tight { letter-spacing: 0.04em; }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+    const root = document.getElementById("warehouse-out-item-slot");
+    if (!root) return;
+    function syncRemove() {
+        const rows = root.querySelectorAll(".out-line-row");
+        rows.forEach(function (row) {
+            const rm = row.querySelector(".remove-out-line");
+            if (rm) rm.disabled = rows.length <= 1;
+        });
+    }
+    root.addEventListener("click", function (e) {
+        if (e.target.id === "add-out-line" || e.target.closest("#add-out-line")) {
+            const first = root.querySelector(".out-line-row");
+            if (!first) return;
+            const clone = first.cloneNode(true);
+            clone.querySelectorAll("select").forEach(function (el) { el.selectedIndex = 0; });
+            clone.querySelectorAll('input[name="out_qty"]').forEach(function (el) { el.value = ""; });
+            const body = root.querySelector("#out-lines-body");
+            if (body) body.appendChild(clone);
+            syncRemove();
+            return;
+        }
+        const t = e.target.closest(".remove-out-line");
+        if (!t || t.disabled) return;
+        const row = t.closest(".out-line-row");
+        const body = root.querySelector("#out-lines-body");
+        if (row && body && body.querySelectorAll(".out-line-row").length > 1) row.remove();
+        syncRemove();
+    });
+    syncRemove();
+})();
+</script>
+{% endblock %}

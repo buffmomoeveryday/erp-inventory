@@ -1,0 +1,14 @@
+.git
+.github
+.venv
+__pycache__
+*.py[cod]
+*.egg-info
+.pytest_cache
+.ruff_cache
+db.sqlite3
+staticfiles
+.cursor
+terminals
+*.md
+!README.md

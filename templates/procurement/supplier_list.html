@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container-fluid" style="max-width: 52rem;">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 fw-bold mb-0">Suppliers</h1>
+        {% if perms.users.procurement_write %}
+        <a href="{% url 'supplier-create' %}" class="btn btn-dark btn-sm">New supplier</a>
+        {% endif %}
+    </div>
+    <div class="card shadow-sm border overflow-hidden">
+        <div class="table-responsive">
+            <table class="table table-hover table-sm mb-0">
+                <thead class="table-light small text-uppercase text-muted">
+                    <tr><th class="px-3 py-2">Code</th><th class="px-3 py-2">Name</th><th class="px-3 py-2">Email</th><th class="px-3 py-2">Active</th></tr>
+                </thead>
+                <tbody>
+                    {% for s in suppliers %}
+                    <tr><td class="px-3 py-2 font-monospace fw-semibold">{{ s.code }}</td><td class="px-3 py-2">{{ s.name }}</td><td class="px-3 py-2 text-secondary">{{ s.contact_email|default:"—" }}</td><td class="px-3 py-2">{% if s.active %}Yes{% else %}No{% endif %}</td></tr>
+                    {% empty %}
+                    <tr><td colspan="4" class="text-center text-muted py-5">No suppliers.{% if perms.users.procurement_write %} <a href="{% url 'supplier-create' %}" class="fw-semibold">Add one</a>{% endif %}</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <a href="{% url 'purchase-order-list' %}" class="small fw-semibold d-inline-block mt-3">← Purchase orders</a>
+</div>
+{% endblock %}

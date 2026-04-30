@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container-xxl px-3 px-lg-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <h1 class="h3 fw-bold text-dark mb-0">New purchase order</h1>
+        <a href="{% url 'purchase-order-list' %}" class="small fw-semibold">← Purchase orders</a>
+    </div>
+
+    <form method="post">
+        {% csrf_token %}
+
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-body p-4 p-lg-5">
+                <h2 class="h6 text-uppercase text-secondary fw-bold mb-3" style="letter-spacing: 0.04em;">Supplier</h2>
+                <div class="row">
+                    <div class="col-12 col-lg-8 col-xl-6">
+                        <label class="form-label small fw-semibold" for="{{ form.supplier.id_for_label }}">Supplier</label>
+                        {{ form.supplier }}
+                        {% for e in form.supplier.errors %}<p class="text-danger small mb-0 mt-1">{{ e }}</p>{% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-body p-4 p-lg-5">
+                <h2 class="h6 text-uppercase text-secondary fw-bold mb-1" style="letter-spacing: 0.04em;">Line items</h2>
+                <p class="text-muted small mb-4">Each row is one PO line. Packaging is optional when the item has package definitions.</p>
+                {{ formset.management_form }}
+                <div class="vstack gap-3">
+                    {% for f in formset %}
+                    <div class="rounded-3 border bg-light p-3 p-md-4">
+                        <div class="row g-3 align-items-end">
+                            <div class="col-12 col-lg-4">
+                                <label class="form-label small fw-semibold mb-1" for="{{ f.item.id_for_label }}">{{ f.item.label }}</label>
+                                {{ f.item }}
+                                {% for e in f.item.errors %}<span class="text-danger small d-block mt-1">{{ e }}</span>{% endfor %}
+                            </div>
+                            <div class="col-12 col-md-6 col-lg-3">
+                                <label class="form-label small fw-semibold mb-1" for="{{ f.packaging.id_for_label }}">{{ f.packaging.label }}</label>
+                                {{ f.packaging }}
+                                {% for e in f.packaging.errors %}<span class="text-danger small d-block mt-1">{{ e }}</span>{% endfor %}
+                            </div>
+                            <div class="col-6 col-md-3 col-lg-2">
+                                <label class="form-label small fw-semibold mb-1" for="{{ f.quantity_ordered.id_for_label }}">{{ f.quantity_ordered.label }}</label>
+                                {{ f.quantity_ordered }}
+                            </div>
+                            <div class="col-6 col-md-3 col-lg-2">
+                                <label class="form-label small fw-semibold mb-1" for="{{ f.unit_price.id_for_label }}">{{ f.unit_price.label }}</label>
+                                {{ f.unit_price }}
+                            </div>
+                            <div class="col-12 col-lg-1 text-lg-end">
+                                {% if f.DELETE %}
+                                <div class="form-check d-inline-block">
+                                    {{ f.DELETE }}
+                                    <label class="form-check-label small" for="{{ f.DELETE.id_for_label }}">Remove</label>
+                                </div>
+                                {% endif %}
+                                {{ f.id }}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% if formset.non_form_errors %}<p class="text-danger small mt-3 mb-0">{{ formset.non_form_errors }}</p>{% endif %}
+            </div>
+        </div>
+
+        <div class="d-flex flex-wrap gap-2 justify-content-end pt-2">
+            <a href="{% url 'purchase-order-list' %}" class="btn btn-outline-secondary">Cancel</a>
+            <button type="submit" class="btn btn-dark btn-lg px-4">Save draft</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

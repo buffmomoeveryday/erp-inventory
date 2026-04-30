@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid" style="max-width: 64rem;">
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb small mb-0">
+            {% if perms.users.org_settings %}
+            <li class="breadcrumb-item"><a href="{% url 'settings-hub' %}">Settings</a></li>
+            {% endif %}
+            <li class="breadcrumb-item"><a href="{% url 'uom-settings-hub' %}">UOM</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Units</li>
+        </ol>
+    </nav>
+    <div class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between gap-3 mb-3">
+        <div>
+            <h1 class="h3 fw-bold text-dark mb-1">Units of measure</h1>
+            <p class="text-muted small mb-0">Conversion factor is how many base units equal one of this unit.</p>
+        </div>
+        {% if perms.users.uom_settings %}
+        <a href="{% url 'uom-create' %}" class="btn btn-dark btn-sm">New unit</a>
+        {% endif %}
+    </div>
+
+    <form method="get" class="row g-2 align-items-end mb-3">
+        <div class="col-auto">
+            <label for="category" class="form-label small text-muted mb-0">Category</label>
+            <select name="category" id="category" class="form-select form-select-sm" onchange="this.form.submit()">
+                <option value="">All</option>
+                {% for c in categories %}
+                <option value="{{ c.pk }}" {% if filter_category == c.pk|stringformat:"s" %}selected{% endif %}>{{ c.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+    </form>
+
+    <div class="card shadow-sm overflow-hidden">
+        <div class="table-responsive">
+            <table class="table table-hover table-sm mb-0" style="min-width: 640px;">
+                <thead class="table-light small text-uppercase text-muted">
+                    <tr>
+                        <th class="px-3 py-2">Name</th>
+                        <th class="px-3 py-2">Abbr</th>
+                        <th class="px-3 py-2">Category</th>
+                        <th class="px-3 py-2">Base</th>
+                        <th class="px-3 py-2 text-end">Factor</th>
+                        <th class="px-3 py-2"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for u in units %}
+                    <tr>
+                        <td class="px-3 py-2">{{ u.name }}</td>
+                        <td class="px-3 py-2 font-monospace small">{{ u.abbreviation }}</td>
+                        <td class="px-3 py-2 small">{{ u.category.name }}</td>
+                        <td class="px-3 py-2">{% if u.is_base_unit %}<span class="badge text-bg-secondary">Base</span>{% else %}—{% endif %}</td>
+                        <td class="px-3 py-2 text-end font-monospace small">{{ u.conversion_factor }}</td>
+                        <td class="px-3 py-2 text-end">
+                            {% if perms.users.uom_settings %}<a href="{% url 'uom-edit' u.pk %}" class="btn btn-outline-secondary btn-sm">Edit</a>{% else %}—{% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="px-3 py-4 text-center text-muted small">No units yet.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

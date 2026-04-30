@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block title %}Move stock{% endblock %}
+
+{% block content %}
+<div class="container-xxl px-3 px-lg-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
+        <div class="pe-3" style="max-width: 40rem;">
+            <h1 class="h3 fw-bold text-dark mb-1">Move stock</h1>
+            <p class="text-muted small mb-0">Transfer one SKU from a source warehouse to a destination. The item list loads when you choose the source.</p>
+        </div>
+        <a href="{% url 'warehouse-list' %}" class="small fw-semibold text-nowrap mt-1">← Warehouses</a>
+    </div>
+
+    <form id="stock-move-form" method="post" action="{% url 'stock-move' %}" class="card shadow-sm border-0">
+        <div class="card-body p-4 p-lg-5">
+            {% csrf_token %}
+            {% if form.non_field_errors %}
+            <div class="alert alert-danger small mb-4">{{ form.non_field_errors }}</div>
+            {% endif %}
+            <h2 class="h6 text-uppercase text-secondary fw-bold mb-3" style="letter-spacing: 0.04em;">Warehouses</h2>
+            <div class="row g-3 mb-4">
+                <div class="col-md-6">
+                    <label class="form-label small fw-semibold" for="{{ form.from_warehouse.id_for_label }}">{{ form.from_warehouse.label }}</label>
+                    {{ form.from_warehouse }}
+                    {% for e in form.from_warehouse.errors %}<p class="text-danger small mb-0 mt-1">{{ e }}</p>{% endfor %}
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label small fw-semibold" for="{{ form.to_warehouse.id_for_label }}">{{ form.to_warehouse.label }}</label>
+                    {{ form.to_warehouse }}
+                    {% for e in form.to_warehouse.errors %}<p class="text-danger small mb-0 mt-1">{{ e }}</p>{% endfor %}
+                </div>
+            </div>
+
+            <h2 class="h6 text-uppercase text-secondary fw-bold mb-3" style="letter-spacing: 0.04em;">Item & quantity</h2>
+            <div id="stock-move-item-slot" class="rounded-3 border bg-light p-3 p-md-4 mb-0">
+                <p class="text-muted small mb-0">Select a <strong>source warehouse</strong> above to load items with stock.</p>
+            </div>
+
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mt-4 pt-3 border-top">
+                <p class="small text-muted mb-0">One SKU per move. Use warehouse out for customer shipments.</p>
+                <button type="submit" class="btn btn-primary btn-lg px-4">Move stock</button>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}

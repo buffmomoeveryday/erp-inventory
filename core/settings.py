@@ -10,9 +10,9 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
-import os
 from pathlib import Path
 
+from decouple import config
 from django.urls.base import reverse_lazy
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -23,29 +23,24 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ.get(
+SECRET_KEY = config(
     "DJANGO_SECRET_KEY",
     "django-insecure-$tagz&2!vl0bhv*cy7x%)+lv2u+x2mfz5r59f*@)_dd*q63c)$",
 )
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG: bool = os.environ.get("DEBUG", "True").lower() in ("1", "true", "yes")
+DEBUG: bool = config("DEBUG", default=True, cast=bool)
 
-_allowed = os.environ.get("ALLOWED_HOSTS", "").strip()
-_fly_app = os.environ.get("FLY_APP_NAME", "").strip()
+_allowed = config("ALLOWED_HOSTS", default="").strip()
 if _allowed:
     ALLOWED_HOSTS = [h.strip() for h in _allowed.split(",") if h.strip()]
-elif _fly_app:
-    ALLOWED_HOSTS = [f"{_fly_app}.fly.dev", ".fly.dev"]
 elif DEBUG:
     ALLOWED_HOSTS = ["127.0.0.1", "localhost", "[::1]"]
 else:
     ALLOWED_HOSTS = []
 
 CSRF_TRUSTED_ORIGINS = []
-if _fly_app:
-    CSRF_TRUSTED_ORIGINS = [f"https://{_fly_app}.fly.dev"]
-_extra_origins = os.environ.get("CSRF_TRUSTED_ORIGINS", "").strip()
+_extra_origins = config("CSRF_TRUSTED_ORIGINS", default="").strip()
 if _extra_origins:
     CSRF_TRUSTED_ORIGINS.extend(
         o.strip() for o in _extra_origins.split(",") if o.strip()
@@ -71,7 +66,7 @@ INSTALLED_APPS = [
 if DEBUG:
     INSTALLED_APPS.append("django_browser_reload")
 
-USE_WHITENOISE = os.environ.get("USE_WHITENOISE", "").lower() in ("1", "true", "yes")
+USE_WHITENOISE = config("USE_WHITENOISE", default=False, cast=bool)
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -113,7 +108,7 @@ WSGI_APPLICATION = "core.wsgi.application"
 
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
-_sqlite_path = os.environ.get("SQLITE_DB_PATH", "").strip()
+_sqlite_path = config("SQLITE_DB_PATH", default="").strip()
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",

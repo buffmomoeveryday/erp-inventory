@@ -12,3 +12,5 @@ wheels/
 # Local DB & collected static
 db.sqlite3
 staticfiles/
+
+.env

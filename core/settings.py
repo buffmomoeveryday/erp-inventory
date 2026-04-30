@@ -32,19 +32,27 @@ SECRET_KEY = config(
 DEBUG: bool = config("DEBUG", default=True, cast=bool)
 
 _allowed = config("ALLOWED_HOSTS", default="").strip()
+_domain = config("DOMAIN", default="").strip()
 if _allowed:
     ALLOWED_HOSTS = [h.strip() for h in _allowed.split(",") if h.strip()]
+elif _domain:
+    ALLOWED_HOSTS = [_domain]
 elif DEBUG:
     ALLOWED_HOSTS = ["127.0.0.1", "localhost", "[::1]"]
 else:
     ALLOWED_HOSTS = []
 
 CSRF_TRUSTED_ORIGINS = []
+if _domain:
+    CSRF_TRUSTED_ORIGINS.extend([f"https://{_domain}", f"http://{_domain}"])
 _extra_origins = config("CSRF_TRUSTED_ORIGINS", default="").strip()
 if _extra_origins:
     CSRF_TRUSTED_ORIGINS.extend(
         o.strip() for o in _extra_origins.split(",") if o.strip()
     )
+
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+USE_X_FORWARDED_HOST = True
 
 
 # Application definition

@@ -1,7 +1,7 @@
 # Fly.io — https://fly.io/docs/reference/configuration/
 # Replace the app name after: fly apps create <name> && fly.toml app = "<name>"
 app = "erp-inventory"
-primary_region = "iad"
+primary_region = "bom"
 
 [build]
 
